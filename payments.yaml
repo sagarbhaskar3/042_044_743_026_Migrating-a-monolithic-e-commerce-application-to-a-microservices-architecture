@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-deployment
+  labels:
+    app: payments
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payments
+  template:
+    metadata:
+      labels:
+        app: payments
+    spec:
+      containers:
+      - name: user
+        image: tashwinsj/payments
+        ports:
+        - containerPort: 5004
+        env:
+        - name: USER_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-user
+        - name: USER_PWD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-password 
+        - name: DB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-config
+              key: mongo-url
+
+
+         
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payments-service
+spec:
+  type: NodePort
+  selector:
+    app: payments
+  ports:
+    - protocol: TCP
+      port: 5004
+      targetPort: 5004
+      nodePort: 30203
